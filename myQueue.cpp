@@ -8,7 +8,7 @@ myQueue::myQueue(int cap) {
 }
 
 myQueue::~myQueue() {
-  delete[] arr; // Clean up memory
+  delete[] arr;  // Clean up memory
 }
 
 void myQueue::enqueue(int x) {
@@ -40,4 +40,10 @@ int myQueue::getRear() {
   if (size == 0) return -1;
   int rear = (front + size - 1) % capacity;
   return arr[rear];
+}
+
+int myQueue::getAt(int index) {
+  if (index < 0 || index >= size) return -1;
+  int pos = (front + index) % capacity;
+  return arr[pos];
 }

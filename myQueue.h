@@ -19,6 +19,8 @@ public:
   int getRear();
   bool isFull() { return size == capacity; }
   bool isEmpty() { return size == 0; }
+  int getAt(int index);
+  int getSize() { return size; }
 };
 
 #endif
