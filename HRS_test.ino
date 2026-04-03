@@ -24,42 +24,41 @@ void setup() {
   Serial.begin(9600);
   matrix.begin();
 }
-
 void loop() {
   unsigned long currentMillis = millis();
-  //Get raw data and map
+
   if (currentMillis - lastSampleTime >= sampleInterval) {
     lastSampleTime = currentMillis;
 
     int rawValue = analogRead(sensorPin);
 
-    // 2. Manage the Queue with RAW values (for better scaling math)
+    // 1. Add newest data to history
     if (pulseHistory.isFull()) {
       pulseHistory.dequeue();
     }
     pulseHistory.enqueue(rawValue);
 
-    // 3. True Dynamic Scaling Logic
-    // We find the min/max of the LAST 100 samples (about 2 seconds of data)
+    // 2. SCAN THE QUEUE FOR REAL MIN/MAX
     int dynamicMin = 1023;
     int dynamicMax = 0;
 
-    // To do this efficiently without a 'peek' function, we use your
-    // globalMin/Max drift logic, but we adjust the drift speed:
-    if (rawValue < globalMin) globalMin = rawValue;
-    if (rawValue > globalMax) globalMax = rawValue;
-
-    // Slow drift back to center keeps the wave "filling" the screen
-    if (currentMillis % 100 == 0) {  // Every 100ms, nudge the bounds
-      globalMin++;
-      globalMax--;
+    for (int i = 0; i < pulseHistory.getSize(); i++) {
+      int val = pulseHistory.getAt(i);
+      if (val < dynamicMin) dynamicMin = val;
+      if (val > dynamicMax) dynamicMax = val;
     }
 
-    // 4. Map and Constrain
-    int mappedValue = map(rawValue, globalMin, globalMax, 0, 8);
+    // 3. Add a small "Padding" so the wave doesn't hit the absolute edges
+    // This also prevents division by zero if min == max
+    int displayMin = dynamicMin - 2;
+    int displayMax = dynamicMax + 2;
+    if (displayMax - displayMin < 10) displayMax = displayMin + 10;
+
+    // 4. Map using the actual history bounds
+    int mappedValue = map(rawValue, displayMin, displayMax, 0, 8);
     mappedValue = constrain(mappedValue, 0, 8);
 
-    // 5. Shift Frame (Scrolling logic)
+    // 5. Update Frame (Scrolling logic)
     for (int col = 0; col < 11; col++) {
       for (int row = 0; row < 8; row++) {
         frame[row][col] = frame[row][col + 1];
@@ -71,17 +70,11 @@ void loop() {
       frame[row][11] = (row >= (8 - mappedValue)) ? 1 : 0;
     }
 
-    // 7. Render
     matrix.renderBitmap(frame, 8, 12);
 
-    // Send to matrix
-    matrix.renderBitmap(frame, 8, 12);
-    Serial.print("Min:");
-    Serial.print(globalMin);
-    Serial.print(" Max:");
-    Serial.print(globalMax);
-    Serial.print(" Raw:");
+    // Debugging
+    Serial.print(displayMin); Serial.print(",");
+    Serial.print(displayMax); Serial.print(",");
     Serial.println(rawValue);
   }
-  // delay(50);
 }
