@@ -7,11 +7,6 @@ ArduinoLEDMatrix matrix;
 const int sensorPin = A0;
 // Led Matrix
 uint8_t frame[8][12] = { 0 };
-// Min Max for dynamic mapping
-int localMin = 1023;
-int localMax = 0;
-static int globalMin = 855;
-static int globalMax = 865;
 
 // millis instead of delay
 unsigned long lastSampleTime = 0;
