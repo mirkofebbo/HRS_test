@@ -16,7 +16,7 @@ myQueue pulseHistory(100);
 const int sampleInterval = 20;  // 20ms = 50Hz sampling rate
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   matrix.begin();
 }
 void loop() {
